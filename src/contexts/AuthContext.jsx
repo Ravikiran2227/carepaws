@@ -1,0 +1,148 @@
+import { createContext, useContext, useEffect, useState } from 'react';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged 
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase/config';
+
+const AuthContext = createContext();
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+export function AuthProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Signup functionality
+  async function signup(email, password, role, additionalData = {}) {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    let location = null;
+    if (navigator.geolocation) {
+      try {
+        location = await new Promise((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            (err) => {
+              console.warn('Geolocation error:', err);
+              resolve(null);
+            },
+            { timeout: 10000 }
+          );
+        });
+      } catch (e) {
+        console.warn('Geolocation exception:', e);
+      }
+    }
+
+    // Create user document in Firestore
+    const userDocRef = doc(db, 'users', user.uid);
+    const newUserData = {
+      uid: user.uid,
+      email,
+      role, // 'owner', 'carer', 'admin'
+      createdAt: new Date().toISOString(),
+      ...(location && { location }),
+      ...additionalData
+    };
+    
+    await setDoc(userDocRef, newUserData);
+    setUserData(newUserData);
+    
+    return user;
+  }
+
+  // Login functionality
+  function login(email, password) {
+    return signInWithEmailAndPassword(auth, email, password);
+  }
+
+  async function adminLogin(email, password) {
+    const adminEmail = 'admin@gmail.com';
+    const adminPassword = 'admin@987';
+
+    if (email !== adminEmail || password !== adminPassword) {
+      return login(email, password);
+    }
+
+    let userCredential;
+    try {
+      userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+    } catch (error) {
+      if (error.code !== 'auth/user-not-found' && error.code !== 'auth/invalid-credential') {
+        throw error;
+      }
+      userCredential = await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
+    }
+
+    const user = userCredential.user;
+    const adminData = {
+      uid: user.uid,
+      email: adminEmail,
+      role: 'admin',
+      firstName: 'Admin',
+      lastName: 'User',
+      createdAt: new Date().toISOString()
+    };
+
+    await setDoc(doc(db, 'users', user.uid), adminData, { merge: true });
+    setUserData(adminData);
+    return userCredential;
+  }
+
+  // Logout functionality
+  function logout() {
+    return signOut(auth);
+  }
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      
+      if (user) {
+        // Fetch user role and data from Firestore
+        const userDocRef = doc(db, 'users', user.uid);
+        try {
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUserData(userDoc.data());
+          } else {
+            console.warn('User document not found in Firestore');
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      } else {
+        setUserData(null);
+      }
+      
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const value = {
+    currentUser,
+    userData,
+    loading,
+    signup,
+    login,
+    adminLogin,
+    logout,
+    setUserData
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+}
