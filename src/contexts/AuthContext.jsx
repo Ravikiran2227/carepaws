@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
+  sendPasswordResetEmail,
   signOut, 
   onAuthStateChanged 
 } from 'firebase/auth';
@@ -62,6 +63,13 @@ export function AuthProvider({ children }) {
   // Login functionality
   function login(email, password) {
     return signInWithEmailAndPassword(auth, email, password);
+  }
+
+  function resetPassword(email) {
+    return sendPasswordResetEmail(auth, email, {
+      url: `${window.location.origin}/login`,
+      handleCodeInApp: false,
+    });
   }
 
   async function adminLogin(email, password) {
@@ -135,6 +143,7 @@ export function AuthProvider({ children }) {
     loading,
     signup,
     login,
+    resetPassword,
     adminLogin,
     logout,
     setUserData

@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getImageExtension, uploadImageFile, validateImageFile } from '../utils/imageUpload';
 
 export default function Profile() {
-  const { currentUser, userData, setUserData } = useAuth();
+  const { currentUser, userData, setUserData, resetPassword } = useAuth();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -20,6 +20,7 @@ export default function Profile() {
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [locating, setLocating] = useState(false);
 
   const serviceOptions = ['Walking', 'Sitting', 'Boarding', 'Drop-in Visits', 'Grooming'];
@@ -115,6 +116,21 @@ export default function Profile() {
       setLoading(false);
     }
   };
+
+  async function handlePasswordReset() {
+    if (!userData?.email) return;
+    try {
+      setResetLoading(true);
+      setMessage({ type: '', text: '' });
+      await resetPassword(userData.email);
+      setMessage({ type: 'success', text: 'Password reset link sent to your email.' });
+    } catch (error) {
+      console.error('Error sending password reset:', error);
+      setMessage({ type: 'error', text: 'Could not send password reset link. Please try again.' });
+    } finally {
+      setResetLoading(false);
+    }
+  }
 
   if (!currentUser || !userData) {
     return (
@@ -355,6 +371,16 @@ export default function Profile() {
         </div>
 
         <div className="pt-6 border-t border-slate-100 flex justify-end">
+          {userData.role !== 'admin' && (
+            <button
+              type="button"
+              onClick={handlePasswordReset}
+              disabled={resetLoading}
+              className="mr-3 px-6 py-2 border border-brand-600 text-brand-700 rounded-md font-medium hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 transition-colors"
+            >
+              {resetLoading ? 'Sending...' : 'Send Password Reset Link'}
+            </button>
+          )}
           <button
             type="submit"
             disabled={loading}

@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 // Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
 import Signup from './pages/Signup';
 import OwnerDashboard from './pages/OwnerDashboard';
 import CarerDashboard from './pages/CarerDashboard';
@@ -28,6 +29,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/signup" element={<Signup />} />
 
               {/* Protected Routes */}
