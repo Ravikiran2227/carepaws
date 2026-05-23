@@ -415,7 +415,7 @@ export default function OwnerDashboard() {
     try {
       const cleanOwnerName = userData ? `${userData.firstName || ''} ${userData.lastName || ''}`.trim() : (currentUser?.displayName || 'Unknown');
 
-      await addDoc(collection(db, 'bookings'), {
+      const bookingRef = await addDoc(collection(db, 'bookings'), {
         ownerId: currentUser?.uid || '',
         ownerName: cleanOwnerName || 'Unknown',
         petId: selectedPet?.id || '',
@@ -432,6 +432,7 @@ export default function OwnerDashboard() {
         userId: bookingCarer.id,
         type: 'new_booking',
         text: `You have a new booking request for ${bookingForm.service} on ${bookingForm.date}.`,
+        bookingId: bookingRef.id,
         read: false,
         createdAt: serverTimestamp()
       });

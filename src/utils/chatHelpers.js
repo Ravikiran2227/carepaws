@@ -112,6 +112,8 @@ export async function sendMessage(conversationId, senderId, receiverId, text) {
     userId: receiverId,
     type: 'new_message',
     text: 'You have a new message.',
+    conversationId,
+    senderId,
     read: false,
     createdAt: serverTimestamp()
   });

@@ -88,6 +88,7 @@ export default function CarerDashboard() {
           userId: booking.ownerId,
           type: 'booking_status',
           text: `Your booking request has been ${status === 'rejected' ? 'declined' : status}.`,
+          bookingId: booking.id,
           read: false,
           createdAt: serverTimestamp()
         });

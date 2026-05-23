@@ -1,9 +1,11 @@
 import { useNotifications } from '../hooks/useNotifications';
 import { db } from '../firebase/config';
 import { doc, updateDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
 export default function Notifications() {
   const { notifications } = useNotifications();
+  const navigate = useNavigate();
 
   const formatNotificationTime = (value) => {
     if (!value) return '';
@@ -20,6 +22,21 @@ export default function Notifications() {
       } catch (error) {
         console.error('Error updating notification:', error);
       }
+    }
+
+    if (notification.type === 'new_message' && notification.conversationId) {
+      navigate(`/chat/${notification.conversationId}`);
+      return;
+    }
+
+    if (notification.type === 'new_booking') {
+      navigate('/carer');
+      return;
+    }
+
+    if (['booking_status', 'booking_reminder'].includes(notification.type)) {
+      navigate('/dashboard?tab=bookings');
+      return;
     }
   };
 

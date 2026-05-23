@@ -181,7 +181,7 @@ export default function CarerDetail() {
     }
 
     const ownerName = `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || 'Unknown';
-    await addDoc(collection(db, 'bookings'), {
+    const bookingRef = await addDoc(collection(db, 'bookings'), {
       ownerId: currentUser.uid,
       ownerName,
       petId: selectedPet.id,
@@ -198,6 +198,7 @@ export default function CarerDetail() {
       userId: carer.id,
       type: 'new_booking',
       text: `You have a new booking request for ${bookingForm.service} on ${bookingForm.date}.`,
+      bookingId: bookingRef.id,
       read: false,
       createdAt: serverTimestamp()
     });
