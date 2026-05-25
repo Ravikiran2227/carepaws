@@ -70,15 +70,20 @@ export default function Login() {
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit} autoComplete="off">
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="sr-only">Email address</label>
               <input
                 id="email"
-                name="email"
+                name="carepaws-login-email"
                 type="email"
                 required
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
+                readOnly
+                onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
                 className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm transition-shadow"
                 placeholder="Email address"
                 value={email}
@@ -89,9 +94,12 @@ export default function Login() {
               <label htmlFor="password" className="sr-only">Password</label>
               <input
                 id="password"
-                name="password"
+                name="carepaws-login-passcode"
                 type="password"
                 required
+                autoComplete="new-password"
+                readOnly
+                onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
                 className="appearance-none relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm transition-shadow"
                 placeholder="Password"
                 value={password}

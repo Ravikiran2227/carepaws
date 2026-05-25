@@ -66,28 +66,34 @@ export function AuthProvider({ children }) {
   }
 
   function resetPassword(email) {
-    return sendPasswordResetEmail(auth, email, {
-      url: `${window.location.origin}/login`,
-      handleCodeInApp: false,
-    });
+    return sendPasswordResetEmail(auth, email);
   }
 
   async function adminLogin(email, password) {
     const adminEmail = 'admin@gmail.com';
     const adminPassword = 'admin@987';
+    const cleanEmail = String(email || '').trim().toLowerCase();
 
-    if (email !== adminEmail || password !== adminPassword) {
-      return login(email, password);
+    if (cleanEmail !== adminEmail || password !== adminPassword) {
+      throw new Error('Use the configured admin credentials: admin@gmail.com / admin@987.');
     }
 
     let userCredential;
     try {
       userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
     } catch (error) {
-      if (error.code !== 'auth/user-not-found' && error.code !== 'auth/invalid-credential') {
+      if (!['auth/user-not-found', 'auth/invalid-credential'].includes(error.code)) {
         throw error;
       }
-      userCredential = await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
+
+      try {
+        userCredential = await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
+      } catch (createError) {
+        if (createError.code === 'auth/email-already-in-use') {
+          throw new Error('The admin email already exists in Firebase Auth with a different password. Reset that Firebase Auth user password to admin@987, then login again.', { cause: createError });
+        }
+        throw createError;
+      }
     }
 
     const user = userCredential.user;
